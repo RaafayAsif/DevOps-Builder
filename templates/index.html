@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>DevOps File Generator</title>
+<style>
+    body {
+        font-family: -apple-system, Segoe UI, Roboto, sans-serif;
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 0 20px;
+        background: #0f172a;
+        color: #e2e8f0;
+    }
+    h1 { color: #38bdf8; }
+    p.subtitle { color: #94a3b8; margin-top: -10px; }
+    form {
+        display: flex;
+        gap: 10px;
+        margin: 24px 0;
+    }
+    input[type=text] {
+        flex: 1;
+        padding: 12px;
+        font-size: 15px;
+        border-radius: 6px;
+        border: 1px solid #334155;
+        background: #1e293b;
+        color: #e2e8f0;
+    }
+    button {
+        padding: 12px 20px;
+        font-size: 15px;
+        border: none;
+        border-radius: 6px;
+        background: #38bdf8;
+        color: #0f172a;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    button:hover { background: #0ea5e9; }
+    .error {
+        background: #450a0a;
+        border: 1px solid #7f1d1d;
+        color: #fca5a5;
+        padding: 12px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+    }
+    .warning {
+        background: #422006;
+        border: 1px solid #92400e;
+        color: #fcd34d;
+        padding: 12px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+    }
+    .badge {
+        display: inline-block;
+        background: #1e293b;
+        border: 1px solid #334155;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 13px;
+        margin-right: 8px;
+        margin-bottom: 8px;
+    }
+    .file-block {
+        margin-top: 28px;
+    }
+    .file-block h3 {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: #38bdf8;
+        border-bottom: 1px solid #334155;
+        padding-bottom: 6px;
+    }
+    pre {
+        background: #1e293b;
+        padding: 16px;
+        border-radius: 8px;
+        overflow-x: auto;
+        font-size: 13px;
+        line-height: 1.5;
+        border: 1px solid #334155;
+    }
+    .copy-btn {
+        background: #334155;
+        color: #e2e8f0;
+        border: none;
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        cursor: pointer;
+    }
+    .copy-btn:hover { background: #475569; }
+    .root-files {
+        color: #64748b;
+        font-size: 13px;
+        margin-bottom: 20px;
+    }
+</style>
+</head>
+<body>
+
+<h1>🛠 DevOps File Generator</h1>
+<p class="subtitle">Paste a public GitHub repo URL. Get a Dockerfile, docker-compose.yml, and Jenkinsfile back.</p>
+
+<form method="POST" action="/analyze">
+    <input type="text" name="repo_url" placeholder="https://github.com/owner/repo" required>
+    <button type="submit">Analyze</button>
+</form>
+
+{% if error %}
+<div class="error">{{ error }}</div>
+{% endif %}
+
+{% if result %}
+{% if warnings %}
+{% for w in warnings %}
+<div class="warning">⚠️ {{ w }}</div>
+{% endfor %}
+{% endif %}
+<div>
+    <span class="badge">Language: {{ info.language }}</span>
+    <span class="badge">Framework: {{ info.framework }}</span>
+    <span class="badge">Base image: {{ info.base_image }}</span>
+    <span class="badge">Port: {{ info.port }}</span>
+    {% if info.has_dockerfile_already %}
+    <span class="badge" style="border-color:#f59e0b;color:#f59e0b;">Repo already has a Dockerfile</span>
+    {% endif %}
+</div>
+<p class="root-files">Root files seen: {{ detected_files|join(", ") }}</p>
+
+<div class="file-block">
+    <h3>Dockerfile <button class="copy-btn" onclick="copyBlock('dockerfile')">Copy</button></h3>
+    <pre id="dockerfile">{{ dockerfile }}</pre>
+</div>
+
+<div class="file-block">
+    <h3>docker-compose.yml <button class="copy-btn" onclick="copyBlock('compose')">Copy</button></h3>
+    <pre id="compose">{{ compose }}</pre>
+</div>
+
+<div class="file-block">
+    <h3>Jenkinsfile <button class="copy-btn" onclick="copyBlock('jenkinsfile')">Copy</button></h3>
+    <pre id="jenkinsfile">{{ jenkinsfile }}</pre>
+</div>
+
+<script>
+function copyBlock(id) {
+    const text = document.getElementById(id).innerText;
+    navigator.clipboard.writeText(text);
+}
+</script>
+{% endif %}
+
+</body>
+</html>
